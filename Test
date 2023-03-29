@@ -1,0 +1,1 @@
+  curl -X POST -H "Authorization: Bearer  <TOKEN>" -H "Cache-Control: no-cache" -H "Content-Type: multipart/form-data" -F "type=text-intent" -F "name=<DATASET_NAME>" -F "data=@<FILE_LOCATION>" https://api.einstein.ai/v2/language/datasets/upload
