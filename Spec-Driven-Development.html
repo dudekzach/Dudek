@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVA MCP Setup — Cursor, local install (SC guide)</title>
+<style>
+  :root{
+    --ink:#0e1a2b;
+    --ink-2:#3d4f66;
+    --paper:#f7f8fa;
+    --panel:#ffffff;
+    --rail:#122033;
+    --rail-2:#1c3047;
+    --orange:#ff4f1f;
+    --amber:#f5a623;
+    --green:#0f8a5f;
+    --red:#c4342b;
+    --line:#d9dee6;
+    --code-bg:#0f1b2c;
+    --code-ink:#dce6f2;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:"Inter","Segoe UI",Roboto,-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);
+    font-size:15.5px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  }
+  a{color:#1257a6}
+  a:focus-visible,button:focus-visible{outline:2.5px solid var(--orange);outline-offset:2px}
+
+  /* ---------- masthead ---------- */
+  header.mast{
+    background:var(--rail);color:#fff;padding:26px 30px 22px;
+    border-bottom:4px solid var(--orange);
+  }
+  .mast-grid{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between}
+  .mast h1{margin:0;font-size:25px;font-weight:650;letter-spacing:-.2px;line-height:1.25}
+  .mast p{margin:6px 0 0;color:#a9bcd2;font-size:14px;max-width:70ch}
+  .mast code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:12.5px}
+
+  /* ---------- OS switch ---------- */
+  .osbox{display:flex;flex-direction:column;gap:7px}
+  .osbox span{font-size:12px;color:#8fa4bd}
+  .osswitch{display:inline-flex;background:var(--rail-2);border-radius:8px;padding:4px;gap:4px}
+  .osswitch button{
+    font:inherit;font-size:13.5px;font-weight:550;border:0;cursor:pointer;
+    background:transparent;color:#a9bcd2;padding:7px 18px;border-radius:6px;
+  }
+  .osswitch button[aria-pressed="true"]{background:#fff;color:var(--ink)}
+
+  /* ---------- shell ---------- */
+  .shell{max-width:1360px;margin:0 auto;display:grid;grid-template-columns:302px 1fr;gap:0;align-items:start}
+
+  /* ---------- rail ---------- */
+  nav.rail{
+    position:sticky;top:0;align-self:start;background:var(--panel);
+    border-right:1px solid var(--line);min-height:100vh;padding:20px 0 40px;
+  }
+  .railhead{padding:0 20px 12px;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--line);margin-bottom:8px}
+  .rail ol{list-style:none;margin:0;padding:0}
+  .rail button.step{
+    display:grid;grid-template-columns:28px 1fr;gap:11px;align-items:baseline;
+    width:100%;text-align:left;font:inherit;background:none;border:0;cursor:pointer;
+    padding:9px 20px;color:var(--ink);border-left:3px solid transparent;
+  }
+  .rail button.step:hover{background:#f0f3f7}
+  .rail button.step[aria-selected="true"]{background:#eef3f9;border-left-color:var(--orange);font-weight:600}
+  .rail .num{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+  .rail button.step[aria-selected="true"] .num{color:var(--orange)}
+  .rail .stepname{font-size:14px;line-height:1.4}
+  .rail .grp{
+    padding:16px 20px 5px;font-size:11.5px;letter-spacing:.06em;color:#7c8ca1;
+    text-transform:uppercase;font-weight:600;
+  }
+
+  /* ---------- panel ---------- */
+  main{padding:34px 42px 90px;min-width:0}
+  .panel{display:none;animation:none}
+  .panel.on{display:block}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;color:var(--orange);margin:0 0 6px}
+  h2{margin:0 0 4px;font-size:27px;font-weight:650;letter-spacing:-.35px;line-height:1.2}
+  .lede{margin:8px 0 26px;font-size:17px;color:var(--ink-2);max-width:74ch}
+  h3{margin:30px 0 8px;font-size:17px;font-weight:620}
+  h4{margin:20px 0 6px;font-size:14.5px;font-weight:620}
+  p,li{max-width:80ch}
+  ul,ol.body{padding-left:22px}
+  li{margin:5px 0}
+
+  /* ---------- three-part blocks ---------- */
+  .wwy{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:22px 0;background:var(--panel)}
+  .wwy > div{padding:15px 18px;border-bottom:1px solid var(--line)}
+  .wwy > div:last-child{border-bottom:0}
+  .wwy h4{margin:0 0 4px;font-size:13px;color:var(--ink-2);font-weight:600}
+  .wwy .what h4{color:#1257a6}
+  .wwy .why h4{color:var(--green)}
+  .wwy .snag h4{color:var(--red)}
+  .wwy p:last-child,.wwy ul:last-child{margin-bottom:0}
+  .wwy p:first-of-type{margin-top:0}
+
+  /* ---------- code ---------- */
+  .codewrap{position:relative;margin:14px 0}
+  pre{
+    background:var(--code-bg);color:var(--code-ink);padding:15px 17px;border-radius:9px;
+    overflow-x:auto;margin:0;font-family:var(--mono);font-size:12.9px;line-height:1.6;
+  }
+  pre b{color:#ffb38a;font-weight:600}
+  pre i{color:#7f96b3;font-style:normal}
+  .copy{
+    position:absolute;top:9px;right:9px;font:inherit;font-size:11.5px;cursor:pointer;
+    background:rgba(255,255,255,.12);color:#cfdcea;border:0;border-radius:5px;padding:4px 9px;
+  }
+  .copy:hover{background:rgba(255,255,255,.22)}
+  code:not(pre code){
+    background:#eceff4;padding:1.5px 5px;border-radius:4px;
+    font-family:var(--mono);font-size:12.9px;word-break:break-word;
+  }
+
+  /* ---------- callouts ---------- */
+  .note{border-left:4px solid;padding:13px 16px;border-radius:0 8px 8px 0;margin:18px 0;background:var(--panel)}
+  .note p:first-child{margin-top:0}.note p:last-child{margin-bottom:0}
+  .note.warn{border-color:var(--amber);background:#fffaf0}
+  .note.stop{border-color:var(--red);background:#fdf3f2}
+  .note.info{border-color:#1257a6;background:#f1f6fc}
+  .note.ok{border-color:var(--green);background:#f1faf5}
+  .note strong{font-weight:650}
+
+  /* ---------- tables ---------- */
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:#eef1f5;font-weight:620;font-size:13px}
+  td code{font-size:12.4px}
+
+  /* ---------- OS-conditional ---------- */
+  .win,.mac{display:none}
+  body[data-os="win"] .win{display:block}
+  body[data-os="mac"] .mac{display:block}
+  body[data-os="win"] span.win,body[data-os="mac"] span.mac{display:inline}
+  .ostag{
+    display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;
+    border-radius:4px;background:#e7ebf1;color:var(--ink-2);margin-bottom:7px;
+  }
+
+  /* ---------- filetree ---------- */
+  .tree{
+    background:var(--code-bg);color:var(--code-ink);padding:16px 18px;border-radius:9px;
+    font-family:var(--mono);font-size:12.7px;line-height:1.75;overflow-x:auto;margin:14px 0;
+  }
+  .tree em{color:#8fd6ae;font-style:normal}
+  .tree u{color:#ffb38a;text-decoration:none}
+  .tree s{color:#7f96b3;text-decoration:none}
+
+  /* ---------- checklist ---------- */
+  .check{list-style:none;padding:0;margin:14px 0}
+  .check li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line);max-width:82ch}
+  .check li:last-child{border-bottom:0}
+  .check input{margin-top:5px;width:16px;height:16px;accent-color:var(--orange);flex:0 0 auto}
+  .check label{cursor:pointer}
+
+  /* ---------- footer nav ---------- */
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:44px;padding-top:20px;border-top:1px solid var(--line)}
+  .pager button{
+    font:inherit;font-size:14px;font-weight:550;cursor:pointer;background:var(--panel);
+    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 17px;
+  }
+  .pager button:hover:not(:disabled){border-color:var(--ink-2)}
+  .pager button:disabled{opacity:.35;cursor:default}
+  .pager button.next{background:var(--rail);color:#fff;border-color:var(--rail)}
+
+  .kbd{font-family:var(--mono);font-size:11.5px;background:#e7ebf1;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr}
+    nav.rail{position:static;min-height:0;border-right:0;border-bottom:1px solid var(--line)}
+    main{padding:24px 20px 70px}
+    h2{font-size:23px}
+  }
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body data-os="win">
+
+<header class="mast">
+  <div class="mast-grid">
+    <div>
+      <h1>AVA MCP harness — local setup in Cursor</h1>
+      <p>Solutions Consultant install guide. Everything runs on your own laptop, MCP server included. Cursor is the only supported IDE for this path. Clone every repo to <strong>This PC</strong>, never a synced OneDrive folder.</p>
+    </div>
+    <div class="osbox">
+      <span>Show commands and paths for</span>
+      <div class="osswitch" role="group" aria-label="Operating system">
+        <button type="button" data-os="win" aria-pressed="true">Windows</button>
+        <button type="button" data-os="mac" aria-pressed="false">macOS</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="Setup steps">
+    <div class="railhead">Work top to bottom. <span class="kbd">←</span> <span class="kbd">→</span> also move between steps.</div>
+    <div class="grp">Understand it</div>
+    <ol id="railList"></ol>
+  </nav>
+
+  <main id="panels"></main>
+</div>
+
+<script>
+/* ============================================================
+   Content model. Each step renders title, lede, and body HTML.
+   ============================================================ */
+const STEPS = [
+{
+  group:"Understand it",
+  name:"What you are installing",
+  title:"What you are installing",
+  lede:"Four separate things get put on your laptop. Knowing which is which makes every later step obvious, and makes troubleshooting a lookup instead of a guess.",
+  body:`
+<h3>The four pieces</h3>
+<table>
+<tr><th style="width:21%">Piece</th><th style="width:25%">What it actually is</th><th>What it does for you</th></tr>
+<tr><td><strong>ava-mcp</strong><br><span style="color:#3d4f66;font-size:13px">the MCP server</span></td><td>A Python program delivered as a wheel and launched by <code>uv</code></td><td>Gives Cursor a set of tools that talk to the Genesys Cloud public API — list AVAs, read and write AVA versions, run test sessions, look up Knowledge, discover Data Actions.</td></tr>
+<tr><td><strong>Skills</strong></td><td>Markdown files, one folder each, on disk</td><td>Written procedures the AI reads before doing AVA work. <code>ava-design</code>, <code>ava-build</code>, <code>ava-test</code>, <code>ava-evaluate</code>, <code>ava-orchestrate</code>, <code>ava-critique</code>, <code>ava-analysis</code>. They encode the lifecycle so output is consistent between SCs.</td></tr>
+<tr><td><strong>Subagents</strong></td><td>Markdown files, one per agent</td><td>Separate AI workers Cursor can spawn for a scoped job. <code>ava-critique</code> reviews a build, <code>ava-design-assist</code> helps shape a spec. They keep long grunt work out of your main chat.</td></tr>
+<tr><td><strong>uv</strong></td><td>A Python package runner</td><td>Fetches and launches <code>ava-mcp</code> on demand. You install it once and then never think about it.</td></tr>
+</table>
+
+<h3>How a request flows</h3>
+<div class="codewrap"><pre>You, in Cursor chat
+      │
+      ▼
+Cursor reads the matching <b>skill</b> (e.g. ava-build/SKILL.md)
+      │
+      ├──▶ may spawn a <b>subagent</b> (ava-critique) for a scoped job
+      │
+      ▼
+Cursor calls a tool on the <b>ava-harness</b> MCP server
+      │
+      ▼
+<b>ava-mcp</b> (local Python process, started by uv)
+      │
+      ▼  HTTPS + OAuth
+Genesys Cloud public API  →  your org's AVAs, Knowledge, Data Actions</pre></div>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>Nothing yet. This step is orientation only.</p></div>
+  <div class="why"><h4>Why it matters</h4><p>Almost every install failure is one of these four pieces being in the wrong place or missing. If you can name the piece, the troubleshooting table on the last step tells you the fix directly.</p></div>
+  <div class="snag"><h4>Common misread</h4><p>People assume "MCP server" means something hosted that they connect to. It is not. The server is a process on your laptop that Cursor starts and stops. If Cursor is closed, nothing is running.</p></div>
+</div>
+
+<div class="note info"><p><strong>Two different MCP servers share a similar name.</strong> This guide sets up the <em>AVA harness</em> (<code>ava-harness</code>), which builds and tests virtual agents. There is also a separate community server for Genesys Cloud analytics and conversation data. Step 11 covers it. They are unrelated and can both be installed.</p></div>
+`
+},
+{
+  group:"Understand it",
+  name:"The official flow in plain English",
+  title:"The official flow in plain English",
+  lede:"The setup instructions are written for the AI agent that performs the install, not for you. Here is the same flow described as what you will experience.",
+  body:`
+<p>The published entry guide tells Cursor's agent to fetch three more guides as it goes: a local install guide, a validate guide, and a verify guide. You will see the agent pull those URLs mid-run. That is expected, not a problem.</p>
+
+<table>
+<tr><th style="width:15%">Official step</th><th style="width:38%">What the instructions say</th><th>What you actually see and do</th></tr>
+<tr><td><strong>Detect IDE</strong></td><td>The agent infers whether it is running in Cursor or Kiro, and must not ask.</td><td>Nothing. You are in Cursor, so it resolves to <code>cursor</code> silently.</td></tr>
+<tr><td><strong>Group A</strong></td><td>Ask install scope: <code>user</code> or <code>repo</code>.</td><td>You get asked one question. Answer <code>user</code> — see step 4 for why.</td></tr>
+<tr><td><strong>Group B</strong></td><td>Ask <code>AVA_HABITAT</code>, the Genesys Cloud region.</td><td>You get asked your region. Answer with the region behind the Genesys Cloud URL you log into daily.</td></tr>
+<tr><td><strong>Group C</strong></td><td>Ask auth style, then client id and secret, or a pre-issued token.</td><td>You paste OAuth credentials into chat. Have them ready before you start — step 3.</td></tr>
+<tr><td><strong>Step 3</strong></td><td>Fetch the local install guide, write <code>mcp.json</code>, install skills and subagents.</td><td>The agent edits your Cursor config and runs two <code>uv run</code> commands. You approve them. Steps 5 and 6.</td></tr>
+<tr><td><strong>Step 3b</strong></td><td>Restart MCP, spawn a subagent to call the <code>permissions</code> tool with <code>probe_sage_scope=true</code>, branch on the result.</td><td>You restart the server once, then the agent reports which permissions your OAuth client is missing. Step 7.</td></tr>
+<tr><td><strong>Step 3 finalize</strong></td><td>Remove <code>AVA_TEST_MODE</code> from config, ask for one more restart.</td><td>One more restart. Step 8.</td></tr>
+<tr><td><strong>Step 4</strong></td><td>Spawn a general-purpose subagent to run three verify checks in parallel.</td><td>The agent reports pass or fail on files, skill discovery, and a live API call. Step 9.</td></tr>
+</table>
+
+<h3>The one design decision worth knowing</h3>
+<p>The install deliberately runs in two phases. Phase one writes the config with a temporary flag, <code>AVA_TEST_MODE=true</code>, which exposes an extra diagnostic tool called <code>permissions</code>. Phase two uses that tool to discover what your OAuth client can and cannot do, then removes the flag.</p>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>You get asked three groups of questions, then the agent does the work with your approval on each command. Two MCP restarts along the way.</p></div>
+  <div class="why"><h4>Why the two-phase design</h4><p>OAuth permission errors surface at the worst possible time — mid-build, on a customer call, as a confusing 403. The probe forces those failures to the front, before you have invested any work, and writes a config that matches what your credentials can actually do.</p></div>
+  <div class="snag"><h4>Watch for</h4><p>The agent may ask install scope, region, or credentials a second time when it fetches a sub-guide. The instructions tell it not to. If it does, answer identically — a mismatch between phases puts your files in two different places.</p></div>
+</div>
+
+<div class="note info"><p><strong>Reference sources.</strong> Entry guide: <code>/static/setup_instructions</code> on the AVA distribution endpoint, with <code>_local</code>, <code>_validate</code> and <code>_verify</code> variants. SC-facing collateral lives on <a href="https://arena.genesys.com/collateral/8ZZRys5c-sM_8LPcml2Mk" target="_blank" rel="noopener">Arena</a> (SSO required — check it for current region list and any org-specific enablement notes).</p></div>
+`
+},
+{
+  group:"Before you start",
+  name:"Prerequisites",
+  title:"Prerequisites",
+  lede:"Install these before you open Cursor and start the run. Missing uv is the single most common reason the server fails to start.",
+  body:`
+<h3>Required</h3>
+<table>
+<tr><th style="width:20%">Item</th><th style="width:22%">Check it</th><th>Notes</th></tr>
+<tr><td><strong>Cursor</strong></td><td>Already open</td><td>Only supported IDE for this path. Keep it current — MCP settings UI has moved between versions.</td></tr>
+<tr><td><strong>uv</strong></td><td><code>uv --version</code></td><td>Launches the MCP server. Install command below.</td></tr>
+<tr><td><strong>Python 3.12</strong></td><td>Handled by uv</td><td>The config pins <code>--python 3.12</code>. uv downloads a matching interpreter itself, so you do not need a system Python.</td></tr>
+<tr><td><strong>Git</strong></td><td><code>git --version</code></td><td>For cloning engagement repos. Not needed by the MCP server itself.</td></tr>
+<tr><td><strong>Genesys OAuth client</strong></td><td>Step 3</td><td>Client credentials grant, with the roles listed on the next step.</td></tr>
+<tr><td><strong>Internal Genesys org</strong></td><td>Ask your org admin</td><td>AVA public API access is currently limited to internal Genesys orgs while the endpoints roll out. Non-internal orgs will fail the verify call.</td></tr>
+</table>
+
+<h3>Install uv</h3>
+<div class="win">
+  <span class="ostag">Windows — PowerShell</span>
+  <div class="codewrap"><pre id="c-uv-win">powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</pre></div>
+  <p>Close and reopen your terminal, then confirm:</p>
+  <div class="codewrap"><pre>uv --version
+where uv</pre></div>
+  <p>Expected install location: <code>C:\\Users\\&lt;you&gt;\\.local\\bin\\uv.exe</code></p>
+</div>
+<div class="mac">
+  <span class="ostag">macOS — Terminal</span>
+  <div class="codewrap"><pre id="c-uv-mac">curl -LsSf https://astral.sh/uv/install.sh | sh</pre></div>
+  <p>Open a new terminal tab, then confirm:</p>
+  <div class="codewrap"><pre>uv --version
+which uv</pre></div>
+  <p>Expected install location: <code>/Users/&lt;you&gt;/.local/bin/uv</code> — on Apple silicon a Homebrew install may land at <code>/opt/homebrew/bin/uv</code> instead.</p>
+</div>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>uv installs to a per-user directory and adds itself to your shell PATH.</p></div>
+  <div class="why"><h4>Why record the full path</h4><p>Cursor launches MCP servers from its own environment, which does not always inherit the PATH from your interactive shell. When <code>ava-harness</code> will not start, the fix is replacing <code>"command": "uv"</code> with the absolute path you just captured. Having it written down turns a 30-minute debug into a 30-second edit.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <p class="win"><strong>Windows:</strong> corporate execution policy can block the installer. If <code>ByPass</code> is refused, get the MSI from the uv releases page, or ask IT. Some SOEs also block <code>astral.sh</code> — you will get a TLS or DNS error rather than a policy error.</p>
+    <p class="mac"><strong>macOS:</strong> if <code>uv --version</code> works in Terminal but the server still fails in Cursor, it is a PATH inheritance problem, not a broken install. Go straight to the absolute-path fix.</p>
+  </div>
+</div>
+`
+},
+{
+  group:"Before you start",
+  name:"Genesys OAuth client",
+  title:"Genesys OAuth client and permissions",
+  lede:"Create a Client Credentials OAuth client and assign it a role carrying the grants below. Get this right first and the probe on step 7 passes cleanly.",
+  body:`
+<h3>Create the client</h3>
+<ol class="body">
+<li>Genesys Cloud → <strong>Admin</strong> → <strong>Integrations</strong> → <strong>OAuth</strong> → <strong>Add Client</strong>.</li>
+<li>Name it something traceable: <code>AVA-MCP-&lt;yourname&gt;-local</code>.</li>
+<li>Grant type: <strong>Client Credentials</strong>.</li>
+<li>Assign a role that carries the grants in the tables below.</li>
+<li>Save, then copy the <strong>Client ID</strong> and <strong>Client Secret</strong>.</li>
+</ol>
+
+<div class="note stop"><p><strong>The secret is shown once.</strong> Copy it at save time into your password manager. If you lose it you must regenerate, which invalidates the value already written into <code>mcp.json</code> and sends you back to step 5.</p></div>
+
+<h3>Core grants — required for AVA authoring</h3>
+<table>
+<tr><th style="width:24%">Domain</th><th style="width:34%">Entity</th><th>Actions</th></tr>
+<tr><td><code>integrations</code></td><td><code>action</code></td><td><code>view</code> (or <code>bridge:actions:view</code>)</td></tr>
+<tr><td><code>agentic</code></td><td><code>virtualAgent</code></td><td><code>add</code>, <code>edit</code>, <code>view</code></td></tr>
+<tr><td><code>agentic</code></td><td><code>virtualAgentVersion</code></td><td><code>add</code>, <code>edit</code>, <code>view</code></td></tr>
+<tr><td><code>agentic</code></td><td><code>virtualAgentVersionJob</code></td><td><code>add</code>, <code>view</code></td></tr>
+<tr><td><code>agentic</code></td><td><code>virtualAgentSession</code>, <code>virtualAgentSessionTurn</code></td><td><code>add</code></td></tr>
+<tr><td><code>knowledge</code></td><td><code>knowledgebase</code></td><td><code>view</code></td></tr>
+<tr><td><code>knowledge</code></td><td><code>knowledgeSetting</code></td><td><code>view</code></td></tr>
+</table>
+
+<h3>Optional grants — mock Data Action authoring</h3>
+<p>Without these you can still discover and read existing Data Actions. You cannot create mock ones, which matters for demo builds where the customer backend does not exist yet.</p>
+<table>
+<tr><th style="width:24%">Domain</th><th style="width:34%">Entity</th><th>Actions</th></tr>
+<tr><td><code>integrations</code></td><td><code>integration</code></td><td><code>view</code>, <code>add</code>, <code>edit</code></td></tr>
+<tr><td><code>integrations</code></td><td><code>action</code></td><td><code>add</code>, <code>edit</code>, <code>delete</code>, <code>execute</code></td></tr>
+</table>
+
+<h3>OAuth scope — separate from role permissions</h3>
+<table>
+<tr><th style="width:44%">API path</th><th>Required scope</th></tr>
+<tr><td><code>/api/v2/agentic/virtualagents/*</code></td><td><code>agentic-virtualagents</code> or <code>agentic-virtualagents:readonly</code></td></tr>
+</table>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>You end up with a client id and secret pair, and a role attached to that client.</p></div>
+  <div class="why"><h4>Why scope and role are both needed</h4><p>They are two independent gates. The role decides what the client may do inside your org. The scope decides whether the client may reach the route at all. A client can hold every <code>agentic</code> role grant and still be refused on the Virtual Agents route for want of scope. The probe on step 7 reports these separately as <code>missing</code> and <code>public_ok</code> so you know which gate closed.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <ul>
+      <li>Secret copied with a trailing space or newline. This is the top cause of a clean-looking install that fails on the first live call. Paste into a plain text editor and check.</li>
+      <li><code>public_ok: false</code> with a correctly configured role means the org does not have the <code>agentic/virtualagents</code> public route enabled. That is a Feature Toggle your org admin or dev team turns on — not something you can fix locally.</li>
+      <li>Reusing a teammate's client works but muddies audit trails and breaks when they rotate the secret. Create your own.</li>
+    </ul>
+  </div>
+</div>
+`
+},
+{
+  group:"Install",
+  name:"Scope, region, and On This PC",
+  title:"Install scope, region, and On This PC",
+  lede:"Two answers to have ready, plus the one rule that causes the most grief for SCs on managed laptops.",
+  body:`
+<h3>Install scope — answer user</h3>
+<table>
+<tr><th style="width:14%">Scope</th><th style="width:30%">Where things land</th><th>When to pick it</th></tr>
+<tr><td><code>user</code></td><td><span class="win"><code>%USERPROFILE%\\.cursor\\</code></span><span class="mac"><code>~/.cursor/</code></span></td><td><strong>Recommended.</strong> AVA is available in every project you open. One install, reused across every engagement.</td></tr>
+<tr><td><code>repo</code></td><td><code>./.cursor/</code> in the workspace</td><td>Only when a repo needs its own pinned version, or you are testing two versions side by side. You must run install commands from the repo root and repeat the install per repo.</td></tr>
+</table>
+
+<div class="note warn"><p><strong>Pick one scope and stay with it for the whole run.</strong> The install, the probe, and the verify all resolve paths from the scope you gave at the start. Answer <code>user</code> in one phase and <code>repo</code> in another and the verify step will correctly report missing files — the files exist, just in the other location.</p></div>
+
+<h3>Region — AVA_HABITAT</h3>
+<p>Match it to the Genesys Cloud URL you log into.</p>
+<table>
+<tr><th style="width:26%">AVA_HABITAT</th><th>Genesys Cloud web app</th></tr>
+<tr><td><code>prod</code> <span style="color:#3d4f66">(US East)</span></td><td><code>https://apps.mypurecloud.com</code></td></tr>
+<tr><td><code>prod-usw2</code></td><td><code>https://apps.usw2.pure.cloud</code></td></tr>
+<tr><td><code>prod-cac1</code></td><td><code>https://apps.cac1.pure.cloud</code></td></tr>
+<tr><td><code>prod-euw1</code></td><td><code>https://apps.mypurecloud.ie</code></td></tr>
+<tr><td><code>prod-euw2</code></td><td><code>https://apps.euw2.pure.cloud</code></td></tr>
+<tr><td><code>prod-euc1</code></td><td><code>https://apps.mypurecloud.de</code></td></tr>
+<tr><td><code>prod-euc2</code></td><td><code>https://apps.euc2.pure.cloud</code></td></tr>
+<tr><td><code>prod-apne1</code></td><td><code>https://apps.mypurecloud.jp</code></td></tr>
+<tr><td><code>prod-apne2</code> / <code>prod-apne3</code></td><td><code>https://apps.apne2.pure.cloud</code> / <code>apne3</code></td></tr>
+<tr><td><code>prod-aps1</code></td><td><code>https://apps.aps1.pure.cloud</code></td></tr>
+<tr><td><code>prod-apse1</code></td><td><code>https://apps.apse1.pure.cloud</code></td></tr>
+<tr><td><code>prod-apse2</code></td><td><code>https://apps.mypurecloud.com.au</code></td></tr>
+<tr><td><code>prod-mec1</code></td><td><code>https://apps.mec1.pure.cloud</code></td></tr>
+<tr><td><code>prod-mxc1</code></td><td><code>https://apps.mxc1.pure.cloud</code></td></tr>
+<tr><td><code>prod-sae1</code></td><td><code>https://apps.sae1.pure.cloud</code></td></tr>
+</table>
+
+<h3>Clone every repo to This PC</h3>
+<div class="note stop">
+<p><strong>Rule: engagement repos and workspaces go on local disk, never inside a synced OneDrive folder.</strong></p>
+<p class="win">Use <code>C:\\Users\\&lt;you&gt;\\dev\\&lt;customer&gt;\\</code> or <code>C:\\Work\\&lt;customer&gt;\\</code>. Do not use <code>C:\\Users\\&lt;you&gt;\\OneDrive - Genesys...\\</code>, and check that Desktop and Documents have not been redirected into OneDrive by Known Folder Move — on many Genesys laptops they have.</p>
+<p class="mac">Use <code>~/dev/&lt;customer&gt;/</code> or <code>~/Work/&lt;customer&gt;/</code>. Do not use <code>~/Library/CloudStorage/OneDrive-Genesys.../</code>, and check whether Desktop and Documents are being synced under iCloud Drive or OneDrive.</p>
+<p><span class="win">In File Explorer's save dialog, the location list shows <strong>This PC</strong> separately from <strong>OneDrive</strong>. Pick This PC.</span><span class="mac">In Finder, <strong>Locations</strong> shows your Mac separately from cloud storage. Save under your home folder, not a CloudStorage path.</span></p>
+</div>
+
+<h4>Why this rule exists</h4>
+<ul>
+<li><strong>Sync clients corrupt git.</strong> OneDrive rewrites and re-uploads files under <code>.git/</code> mid-operation. You get index corruption, phantom modified files, and merge state that survives a reset.</li>
+<li><strong>Files on demand produces zero-byte reads.</strong> A dehydrated placeholder looks like a real file to a directory listing but returns nothing when read. Skills silently appear empty, and the failure looks like a bad install.</li>
+<li><strong>Path length.</strong> Windows still trips over 260-character paths. A long OneDrive tenant prefix plus a deep <code>node_modules</code> tree crosses it.</li>
+<li><strong>Locks.</strong> Sync holds file handles. Installers and build steps fail with access-denied that disappears on retry, which makes the cause hard to see.</li>
+<li><strong>Credentials.</strong> A stray <code>.env</code> in a repo under OneDrive is a secret synced to cloud storage and possibly shared.</li>
+</ul>
+
+<div class="note info"><p><strong>Cursor's own config directory is fine.</strong> <span class="win"><code>%USERPROFILE%\\.cursor\\</code></span><span class="mac"><code>~/.cursor/</code></span> sits in your home folder, which sync tools do not touch by default. The On This PC rule is about repos and workspaces. If your entire user profile is redirected into OneDrive, raise it with IT — that configuration breaks more than this install.</p></div>
+`
+},
+{
+  group:"Install",
+  name:"Where the files live",
+  title:"Where the files live on your laptop",
+  lede:"Four locations. Learn these and you can verify or repair the install by hand, without waiting on the agent.",
+  body:`
+<div class="win">
+<span class="ostag">Windows — user scope</span>
+<div class="tree">C:\\Users\\&lt;you&gt;\\
+├── <u>.cursor\\</u>                          <s>Cursor user config — the install target</s>
+│   ├── <em>mcp.json</em>                      <s>MCP server definitions, incl. ava-harness + secrets</s>
+│   ├── <u>skills\\</u>                        <s>written by ava-mcp-update</s>
+│   │   ├── ava-orchestrate\\SKILL.md
+│   │   ├── ava-design\\SKILL.md
+│   │   ├── ava-build\\SKILL.md
+│   │   ├── ava-test\\SKILL.md
+│   │   ├── ava-evaluate\\SKILL.md
+│   │   ├── ava-critique\\SKILL.md
+│   │   └── ava-analysis\\SKILL.md
+│   └── <u>agents\\</u>                        <s>subagent definitions</s>
+│       ├── <em>ava-critique.md</em>
+│       └── <em>ava-design-assist.md</em>
+│
+├── <u>.local\\bin\\</u>
+│   └── <em>uv.exe</em>                        <s>the runner Cursor invokes</s>
+│
+├── AppData\\Local\\uv\\                   <s>wheel + interpreter cache</s>
+│
+└── <u>dev\\</u>                              <s>YOUR repos — This PC, not OneDrive</s>
+    ├── hni-ava\\
+    └── onb-card-fraud\\</div>
+<p>Paste into Explorer's address bar to jump straight there:</p>
+<div class="codewrap"><pre>%USERPROFILE%\\.cursor</pre></div>
+</div>
+
+<div class="mac">
+<span class="ostag">macOS — user scope</span>
+<div class="tree">/Users/&lt;you&gt;/
+├── <u>.cursor/</u>                           <s>Cursor user config — the install target</s>
+│   ├── <em>mcp.json</em>                       <s>MCP server definitions, incl. ava-harness + secrets</s>
+│   ├── <u>skills/</u>                         <s>written by ava-mcp-update</s>
+│   │   ├── ava-orchestrate/SKILL.md
+│   │   ├── ava-design/SKILL.md
+│   │   ├── ava-build/SKILL.md
+│   │   ├── ava-test/SKILL.md
+│   │   ├── ava-evaluate/SKILL.md
+│   │   ├── ava-critique/SKILL.md
+│   │   └── ava-analysis/SKILL.md
+│   └── <u>agents/</u>                         <s>subagent definitions</s>
+│       ├── <em>ava-critique.md</em>
+│       └── <em>ava-design-assist.md</em>
+│
+├── <u>.local/bin/</u>
+│   └── <em>uv</em>                             <s>the runner Cursor invokes</s>
+│
+├── Library/Caches/uv/                   <s>wheel + interpreter cache</s>
+│
+└── <u>dev/</u>                               <s>YOUR repos — local disk, not CloudStorage</s>
+    ├── hni-ava/
+    └── onb-card-fraud/</div>
+<p><code>.cursor</code> is hidden in Finder. Press <span class="kbd">⌘ ⇧ .</span> to reveal it, or <span class="kbd">⌘ ⇧ G</span> and type the path.</p>
+</div>
+
+<h3>Repo scope equivalents</h3>
+<table>
+<tr><th style="width:26%">What</th><th>User scope</th><th>Repo scope</th></tr>
+<tr><td>MCP config</td><td><span class="win"><code>%USERPROFILE%\\.cursor\\mcp.json</code></span><span class="mac"><code>~/.cursor/mcp.json</code></span></td><td><code>./.cursor/mcp.json</code></td></tr>
+<tr><td>Skills</td><td><span class="win"><code>%USERPROFILE%\\.cursor\\skills\\</code></span><span class="mac"><code>~/.cursor/skills/</code></span></td><td><code>./.cursor/skills/</code></td></tr>
+<tr><td>Subagents</td><td><span class="win"><code>%USERPROFILE%\\.cursor\\agents\\</code></span><span class="mac"><code>~/.cursor/agents/</code></span></td><td><code>./.cursor/agents/</code></td></tr>
+</table>
+
+<h3>What a skill file contains</h3>
+<p>Each <code>SKILL.md</code> opens with a front-matter block holding a name and a description. Cursor reads only those descriptions until one matches what you asked for, then loads the full file. That is why a skill with a vague description never fires, and why the skills are split by lifecycle phase rather than bundled into one document.</p>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>Step 6 writes the <code>skills/</code> and <code>agents/</code> trees. Step 5 writes <code>mcp.json</code>. The uv cache fills itself on first server start.</p></div>
+  <div class="why"><h4>Why the split between skills and subagents</h4><p>Skills are procedure — what good AVA work looks like, loaded into your current chat. Subagents are labour — a separate worker with its own context window for a bounded job. Putting a long critique pass in a subagent keeps your main thread from filling with review output and losing the thread of your build.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <ul>
+      <li><code>mcp.json</code> contains your client secret in plain text. Never screenshot the file, never paste it in Slack, never commit a repo-scope <code>.cursor/mcp.json</code>. Add <code>.cursor/mcp.json</code> to <code>.gitignore</code> if you use repo scope.</li>
+      <li>Skills present but never firing usually means Cursor has not reloaded. Restart it.</li>
+      <li class="win">A <code>.cursor</code> folder created by an editor running as admin can end up with permissions your normal session cannot write. If <code>ava-mcp-update</code> reports access denied, check ownership.</li>
+    </ul>
+  </div>
+</div>
+`
+},
+{
+  group:"Install",
+  name:"Write mcp.json",
+  title:"Write mcp.json",
+  lede:"The agent does this for you. Read it anyway — this file is where you will return for every future fix.",
+  body:`
+<h3>File location</h3>
+<div class="win"><div class="codewrap"><pre>%USERPROFILE%\\.cursor\\mcp.json          <i># user scope — recommended</i>
+.\\.cursor\\mcp.json                     <i># repo scope</i></pre></div></div>
+<div class="mac"><div class="codewrap"><pre>~/.cursor/mcp.json                     <i># user scope — recommended</i>
+./.cursor/mcp.json                     <i># repo scope</i></pre></div></div>
+
+<h3>The ava-harness entry</h3>
+<div class="codewrap"><pre id="c-mcp">{
+  "mcpServers": {
+    "<b>ava-harness</b>": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--python", "3.12",
+        "--reinstall-package", "ava_mcp",
+        "--default-index", "https://gbe6mr3zf8.execute-api.us-east-1.amazonaws.com/static",
+        "--with", "ava_mcp",
+        "ava-mcp"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "<b>AVA_HABITAT</b>": "prod",
+        "<b>GENESYS_CLIENT_ID</b>": "your-client-id",
+        "<b>GENESYS_CLIENT_SECRET</b>": "your-client-secret",
+        "<b>AVA_TEST_MODE</b>": "true"
+      },
+      "disabled": false,
+      "timeout": 60000
+    }
+  }
+}</pre></div>
+
+<h3>Line by line</h3>
+<table>
+<tr><th style="width:30%">Key</th><th>What it does</th></tr>
+<tr><td><code>command: "uv"</code></td><td>Cursor runs this to start the server. Swap for the absolute path from step 3 if the server will not start.</td></tr>
+<tr><td><code>--python 3.12</code></td><td>Pins the interpreter. uv fetches it if absent.</td></tr>
+<tr><td><code>--reinstall-package ava_mcp</code></td><td>Re-resolves the wheel on every server start, so you pick up fixes even when the version number has not moved. Costs a few seconds at launch.</td></tr>
+<tr><td><code>--default-index</code></td><td>The private index serving the <code>ava_mcp</code> wheel. Not on public PyPI.</td></tr>
+<tr><td><code>AVA_HABITAT</code></td><td>Your region from step 5.</td></tr>
+<tr><td><code>GENESYS_CLIENT_ID</code> / <code>_SECRET</code></td><td>Client credentials. Replace both with <code>GENESYS_ACCESS_TOKEN</code> if using a pre-issued bearer instead.</td></tr>
+<tr><td><code>AVA_TEST_MODE: "true"</code></td><td><strong>Temporary.</strong> Exposes the <code>permissions</code> diagnostic tool for step 7. Removed on step 8.</td></tr>
+<tr><td><code>timeout: 60000</code></td><td>60 seconds. Generous on purpose — first start downloads the interpreter and the wheel.</td></tr>
+</table>
+
+<h3>Pinned wheel alternative</h3>
+<p>When the index is unreachable from your network, download the wheel and point at it directly:</p>
+<div class="codewrap"><pre>"args": [
+  "run",
+  "--python", "3.12",
+  "--reinstall-package", "ava_mcp",
+  "--with", "<i>&lt;path-to-whl&gt;</i>/ava_mcp-0.2.0-py3-none-any.whl",
+  "ava-mcp"
+]</pre></div>
+<p class="win">Store the wheel somewhere local and short, such as <code>C:\\Users\\&lt;you&gt;\\dev\\ava\\</code>. Use double backslashes in JSON, or forward slashes, which also work.</p>
+<p class="mac">Store the wheel somewhere local, such as <code>~/dev/ava/</code>. Expand <code>~</code> to the full path — JSON does not.</p>
+
+<h3>Restart the server</h3>
+<p>Cursor → <strong>Settings</strong> → <strong>MCP</strong> → find <code>ava-harness</code> → restart. First start is slow. Wait for a green or connected state and a tool count before continuing.</p>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>Cursor shells out to uv, which resolves Python 3.12 and the <code>ava_mcp</code> wheel, then launches the server over stdio and enumerates its tools.</p></div>
+  <div class="why"><h4>Why stdio matters</h4><p>There is no port, no URL, no listening socket. The server is a child process of Cursor talking over standard input and output. Nothing to firewall, nothing exposed on your network, and nothing left running when Cursor quits — which is also why every config change needs a restart to take effect.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <ul>
+      <li><strong>An <code>ava-harness</code> entry already exists.</strong> Edit it in place. A duplicate key in JSON means one silently wins and you debug the wrong config.</li>
+      <li><strong>Trailing comma or smart quotes.</strong> Pasting through a document editor can substitute curly quotes. The server will not start and the error is unhelpful. Validate the JSON.</li>
+      <li><strong>Server starts then dies.</strong> Usually the index is blocked by a proxy. Test with <code>uv run --python 3.12 --default-index https://gbe6mr3zf8.execute-api.us-east-1.amazonaws.com/static --with ava_mcp ava-mcp --help</code> in a terminal — you will see the real network error there, which Cursor hides.</li>
+      <li><strong>Long first start.</strong> Two to three minutes on a cold cache is normal. Do not restart mid-download; you will start over.</li>
+    </ul>
+  </div>
+</div>
+`
+},
+{
+  group:"Install",
+  name:"Install skills and subagents",
+  title:"Install skills and subagents",
+  lede:"Two commands. Preview first, then apply. Never skip the preview — it shows you exactly which files are about to be written or replaced.",
+  body:`
+<h3>Preview</h3>
+<div class="win"><div class="codewrap"><pre id="c-prev-win">uv run --python 3.12 --reinstall-package ava_mcp ^
+  --default-index "https://gbe6mr3zf8.execute-api.us-east-1.amazonaws.com/static" ^
+  --with ava_mcp ava-mcp-update "%USERPROFILE%\\.cursor" --dry-run</pre></div>
+<p>In PowerShell use a backtick continuation instead of <code>^</code>, or put it all on one line.</p></div>
+<div class="mac"><div class="codewrap"><pre id="c-prev-mac">uv run --python 3.12 --reinstall-package ava_mcp \\
+  --default-index "https://gbe6mr3zf8.execute-api.us-east-1.amazonaws.com/static" \\
+  --with ava_mcp ava-mcp-update ~/.cursor --dry-run</pre></div></div>
+
+<h3>Apply</h3>
+<div class="win"><div class="codewrap"><pre id="c-app-win">uv run --python 3.12 --reinstall-package ava_mcp ^
+  --default-index "https://gbe6mr3zf8.execute-api.us-east-1.amazonaws.com/static" ^
+  --with ava_mcp ava-mcp-update "%USERPROFILE%\\.cursor" --yes</pre></div></div>
+<div class="mac"><div class="codewrap"><pre id="c-app-mac">uv run --python 3.12 --reinstall-package ava_mcp \\
+  --default-index "https://gbe6mr3zf8.execute-api.us-east-1.amazonaws.com/static" \\
+  --with ava_mcp ava-mcp-update ~/.cursor --yes</pre></div></div>
+
+<div class="note info"><p><strong>Repo scope:</strong> replace the destination with <code>./.cursor</code> and run from the repo root. <strong>Already have <code>ava-mcp</code> on PATH:</strong> the short form works — <code>ava-mcp-update ~/.cursor --dry-run</code> then <code>--yes</code>.</p></div>
+
+<h3>Confirm the files landed</h3>
+<div class="win"><div class="codewrap"><pre>dir "%USERPROFILE%\\.cursor\\skills"
+dir "%USERPROFILE%\\.cursor\\agents"
+type "%USERPROFILE%\\.cursor\\skills\\ava-build\\SKILL.md"</pre></div></div>
+<div class="mac"><div class="codewrap"><pre>ls -la ~/.cursor/skills
+ls -la ~/.cursor/agents
+head -20 ~/.cursor/skills/ava-build/SKILL.md</pre></div></div>
+
+<p>You should see seven skill folders and two agent files. If <code>SKILL.md</code> prints nothing but the file shows a size, you are reading a dehydrated cloud placeholder — see step 5.</p>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>The updater writes seven skill folders into <code>&lt;dest&gt;/skills</code> and two subagent definitions into <code>&lt;dest&gt;/agents</code>. Existing AVA files are replaced; your own skills and agents in those folders are left alone.</p></div>
+  <div class="why"><h4>Why preview then apply</h4><p>These are your live Cursor directories, shared with anything else you have installed there. The dry run is your chance to catch a wrong destination before it overwrites something — most often because scope was answered inconsistently and the command is pointing at the wrong tree.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <ul>
+      <li><strong><code>warning: a newer ava-mcp is available</code> on stderr.</strong> Not a failure. The command continues. Re-run the same command later to pick up the newer wheel.</li>
+      <li><strong>Nothing appears after a clean run.</strong> You almost certainly installed to the other scope. Check both <span class="win"><code>%USERPROFILE%\\.cursor\\skills</code></span><span class="mac"><code>~/.cursor/skills</code></span> and <code>./.cursor/skills</code>.</li>
+      <li class="win"><strong>Access denied on Windows.</strong> Close Cursor and retry — it can hold handles in <code>.cursor</code>. If it persists, check folder ownership.</li>
+      <li><strong>Skills installed but not offered in chat.</strong> Cursor indexes skills at startup. Restart the application, not just the MCP server.</li>
+    </ul>
+  </div>
+</div>
+`
+},
+{
+  group:"Validate",
+  name:"Permission probe",
+  title:"Permission probe",
+  lede:"The agent spawns a subagent to interrogate your OAuth client and reports back exactly which gates are open. This is the step that saves you from a mid-build 403.",
+  body:`
+<h3>What the agent runs</h3>
+<p>It calls the <code>permissions</code> tool with <code>probe_sage_scope=true</code> — the tool that <code>AVA_TEST_MODE</code> exposed — and reports these fields verbatim:</p>
+<table>
+<tr><th style="width:34%">Field</th><th>Meaning</th></tr>
+<tr><td><code>passed</code> / <code>missing</code></td><td>Which core role grants your client has and lacks.</td></tr>
+<tr><td><code>scope_probe.public_ok</code></td><td>Whether the client can reach the public Virtual Agents API. <strong>This is the one that gates AVA authoring.</strong></td></tr>
+<tr><td><code>scope_probe.internal_ok</code></td><td>Diagnostic only. Ignore it — no config decision hangs on it.</td></tr>
+<tr><td><code>mock_data_actions_ok</code></td><td>Whether mock Data Action authoring is available.</td></tr>
+<tr><td><code>mock_data_actions_missing</code></td><td>Which integrations grants are absent.</td></tr>
+</table>
+
+<h3>How each result is handled</h3>
+<table>
+<tr><th style="width:26%">Result</th><th style="width:37%">What it means</th><th>What happens next</th></tr>
+<tr><td><code>public_ok: true</code></td><td>Sage scope is working.</td><td>No config change. Proceed.</td></tr>
+<tr><td><code>public_ok: false</code></td><td>Either the role lacks <code>agentic-virtualagents</code> scope, or your org has not enabled the <code>agentic/virtualagents</code> public route.</td><td>You are asked whether you will fix it. Say yes and setup pauses so you can rerun the probe after. Say no and setup continues partially — Knowledge and discovery tools may still work, AVA authoring stays blocked.</td></tr>
+<tr><td><code>mock_data_actions_ok: false</code></td><td>Missing integrations grants for mock authoring.</td><td><code>AVA_MOCK_DATA_ACTIONS_DISABLED=true</code> is written into <code>mcp.json</code>, plus one restart. You keep <code>list_data_actions</code> and <code>get_data_action_schema</code>.</td></tr>
+<tr><td><strong>Probe cannot run</strong></td><td>Tool error, timeout, auth failure, or unusable payload.</td><td>Falls back to a smoke test: <code>list_avas</code> and <code>list_data_actions</code>. Both pass means you are probably fine. Both fail points at credentials, region, or roles.</td></tr>
+</table>
+
+<div class="note warn"><p><strong>If the agent reports probe fields after a smoke-test fallback, distrust the output.</strong> The guide explicitly forbids inventing <code>public_ok</code> or <code>mock_data_actions_ok</code> when the probe did not run. Ask it which path it actually used. A confidently wrong pass here is worse than a clear failure, because you will discover the gap on a customer call.</p></div>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>One MCP restart, then a subagent makes a few API calls and reports. Config is amended only if mock authoring is unavailable.</p></div>
+  <div class="why"><h4>Why a subagent rather than the main thread</h4><p>Two reasons. It keeps raw permission dumps out of your working context. More importantly it proves the subagent system itself can reach the MCP server — which is exactly what <code>ava-critique</code> and <code>ava-design-assist</code> will need to do later. A probe that works in the main thread but fails in a subagent is a real defect worth catching now.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <ul>
+      <li><strong>Probe cannot see the <code>permissions</code> tool.</strong> The restart did not take, or <code>AVA_TEST_MODE</code> was not written. Check the env block and restart again.</li>
+      <li><strong>Everything fails at once.</strong> Suspect the secret first — trailing whitespace is the usual culprit — then the region, then the roles.</li>
+      <li><strong><code>public_ok: false</code> is often not yours to fix.</strong> A Feature Toggle for your org needs enabling. Raise it with your org admin or dev team early; it can take days, and no amount of local retrying moves it.</li>
+    </ul>
+  </div>
+</div>
+`
+},
+{
+  group:"Validate",
+  name:"Finalize and verify",
+  title:"Finalize and verify",
+  lede:"Remove the diagnostic flag, restart once more, then let a subagent prove the install from the outside.",
+  body:`
+<h3>Finalize</h3>
+<ol class="body">
+<li>Remove <code>AVA_TEST_MODE</code> from the <code>env</code> block in <code>mcp.json</code>.</li>
+<li>Restart <code>ava-harness</code> from Cursor's MCP settings. The <code>permissions</code> tool disappears after this — that is the intended end state.</li>
+</ol>
+
+<div class="note warn"><p><strong>One exception.</strong> If you paused to fix OAuth roles or chase a Feature Toggle, leave <code>AVA_TEST_MODE=true</code> in place so the probe can run again when you resume. Only remove it on a terminal outcome.</p></div>
+
+<div class="note stop"><p><strong>Do not let verification start before this restart completes.</strong> The subagents read the live tool list. Run them against a stale config and you will get failures that describe the old state, then spend an hour fixing something that was never broken.</p></div>
+
+<h3>The three verify checks</h3>
+<p>The agent spawns three subagents in parallel — deliberately, to prove the subagent system can see the install.</p>
+
+<h4>Check 1 — files on disk</h4>
+<div class="win"><div class="codewrap"><pre>%USERPROFILE%\\.cursor\\mcp.json                        <i># contains an ava-harness server</i>
+%USERPROFILE%\\.cursor\\skills\\ava-build\\SKILL.md       <i># exists and is readable</i>
+%USERPROFILE%\\.cursor\\agents\\ava-critique.md          <i># exists</i>
+%USERPROFILE%\\.cursor\\agents\\ava-design-assist.md     <i># exists</i></pre></div></div>
+<div class="mac"><div class="codewrap"><pre>~/.cursor/mcp.json                                 <i># contains an ava-harness server</i>
+~/.cursor/skills/ava-build/SKILL.md                <i># exists and is readable</i>
+~/.cursor/agents/ava-critique.md                   <i># exists</i>
+~/.cursor/agents/ava-design-assist.md              <i># exists</i></pre></div></div>
+
+<h4>Check 2 — skill and subagent discovery</h4>
+<p>A subagent lists everything it can see and confirms access to <code>ava-critique</code> and <code>ava-design-assist</code>, plus all seven skills: <code>ava-orchestrate</code>, <code>ava-design</code>, <code>ava-build</code>, <code>ava-test</code>, <code>ava-evaluate</code>, <code>ava-critique</code>, <code>ava-analysis</code>.</p>
+<p><strong>If it fails:</strong> files are in the wrong scope directory. Re-run the MCP config step and the <code>ava-mcp-update ... --yes</code> command against the matching scope, with <code>--reinstall-package</code>, then restart Cursor.</p>
+
+<h4>Check 3 — live API call</h4>
+<p>A subagent calls <code>list_avas</code> with no filters and reports the count or the error verbatim. This is the end-to-end proof: config, credentials, region, scope, and network all working together.</p>
+<p><strong>If it fails, in this order:</strong></p>
+<ol class="body">
+<li>Client id and secret — typos and trailing whitespace. If using a pre-issued token, check it has not expired.</li>
+<li>Confirm the org is <strong>internal</strong>. AVA public API access is limited to internal Genesys orgs while the endpoints roll out.</li>
+<li>If step 9 reported blocked-on-Sage-scope, this will keep failing until the scope or Feature Toggle is sorted. Expected, not a new problem.</li>
+</ol>
+
+<h3>Your own sign-off</h3>
+<ul class="check">
+<li><input type="checkbox" id="k1"><label for="k1"><code>uv --version</code> returns, and you have the absolute path written down</label></li>
+<li><input type="checkbox" id="k2"><label for="k2">OAuth client created, secret stored in a password manager</label></li>
+<li><input type="checkbox" id="k3"><label for="k3">Scope answered consistently as <code>user</code> throughout the run</label></li>
+<li><input type="checkbox" id="k4"><label for="k4"><code>AVA_HABITAT</code> matches the Genesys Cloud URL you log into</label></li>
+<li><input type="checkbox" id="k5"><label for="k5"><code>ava-harness</code> shows connected in Cursor's MCP settings with a tool count</label></li>
+<li><input type="checkbox" id="k6"><label for="k6">Seven skill folders and two agent files present on disk</label></li>
+<li><input type="checkbox" id="k7"><label for="k7">Probe result understood — you know whether mock Data Actions are on or off</label></li>
+<li><input type="checkbox" id="k8"><label for="k8"><code>AVA_TEST_MODE</code> removed and final restart done</label></li>
+<li><input type="checkbox" id="k9"><label for="k9"><code>list_avas</code> returned a count from a subagent</label></li>
+<li><input type="checkbox" id="k10"><label for="k10">Engagement repos cloned to This PC, confirmed not inside a synced folder</label></li>
+</ul>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>Config is cleaned, one restart, three parallel checks, then a pass or fail summary.</p></div>
+  <div class="why"><h4>Why verify from a subagent</h4><p>The main chat has already touched every file it is checking, so it is the least reliable place to confirm they work. A subagent starting cold is a genuine test of what the harness will look like to the workers that actually use it.</p></div>
+  <div class="snag"><h4>Snags</h4><p>A pass here means the plumbing works, not that your permissions are complete. If the probe reported <code>mock_data_actions_ok: false</code>, mock authoring is still off — verify will pass anyway, because that is a deliberate configuration, not a fault.</p></div>
+</div>
+`
+},
+{
+  group:"Reference",
+  name:"The other Genesys MCP server",
+  title:"The other Genesys Cloud MCP server",
+  lede:"A community-maintained server for conversation and analytics data. Separate from the AVA harness, useful for discovery work, and safe to run alongside.",
+  body:`
+<p><a href="https://github.com/MakingChatbots/genesys-cloud-mcp-server" target="_blank" rel="noopener">MakingChatbots/genesys-cloud-mcp-server</a> is an MIT-licensed TypeScript server for the Genesys Cloud <strong>Platform API</strong>. It is a personal project by Lucas Woodward, not a Genesys product, and the README describes it as under active development.</p>
+
+<h3>What it gives you</h3>
+<table>
+<tr><th style="width:36%">Tool</th><th>Use in a discovery or POV context</th></tr>
+<tr><td>Search Queues</td><td>Find queues by name, wildcards supported</td></tr>
+<tr><td>Query Queue Volumes</td><td>Conversation volumes and member counts — sizing containment cases</td></tr>
+<tr><td>Sample Conversations By Queue</td><td>Representative conversation IDs for a queue</td></tr>
+<tr><td>Voice Call Quality</td><td>Quality metrics across conversations</td></tr>
+<tr><td>Conversation Sentiment</td><td>Sentiment per conversation</td></tr>
+<tr><td>Conversation Topics</td><td>Topics on a conversation</td></tr>
+<tr><td>Search Voice Conversations</td><td>Filtered voice conversation search</td></tr>
+<tr><td>Conversation Transcript</td><td>Pull a transcript — intent mining and AVA test case material</td></tr>
+<tr><td>OAuth Clients / Client Usage</td><td>Inventory clients and their API usage</td></tr>
+</table>
+
+<h3>Add it to Cursor</h3>
+<p>Same <code>mcp.json</code>, second entry alongside <code>ava-harness</code>. Needs Node so <code>npx</code> can resolve the package.</p>
+<div class="codewrap"><pre id="c-gc">{
+  "mcpServers": {
+    "<i>ava-harness</i>": { "<i>... leave your existing entry exactly as it is ...</i>" },
+
+    "<b>genesys-cloud</b>": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@makingchatbots/genesys-cloud-mcp-server"],
+      "env": {
+        "GENESYSCLOUD_REGION": "<i>your region</i>",
+        "GENESYSCLOUD_OAUTHCLIENT_ID": "<i>client id</i>",
+        "GENESYSCLOUD_OAUTHCLIENT_SECRET": "<i>client secret</i>"
+      }
+    }
+  }
+}</pre></div>
+
+<div class="note warn"><p><strong>Different variable names, different region format.</strong> This server uses <code>GENESYSCLOUD_*</code> and its own region values — not <code>GENESYS_*</code> and not <code>AVA_HABITAT</code>. Copying values across between the two entries is a common mistake and produces an auth failure that looks like a bad secret.</p></div>
+
+<h3>Permissions</h3>
+<p>Create a separate OAuth client for it. It reads conversation content, transcripts, and sentiment — a materially different and more sensitive scope than AVA authoring. Grant only the permissions matching the tools you intend to use, and keep the two clients distinct so you can revoke one without breaking the other.</p>
+
+<h3>Also available</h3>
+<ul>
+<li><strong>MCP Bundle</strong> — a one-click <code>.mcpb</code> for Claude Desktop, from the repo's releases page. Not for Cursor.</li>
+<li><strong>Docker</strong> — a Dockerfile is in the repo if you would rather not run Node locally.</li>
+</ul>
+
+<div class="wwy">
+  <div class="what"><h4>What happens</h4><p>A second stdio server appears in Cursor's MCP list. The two do not interact.</p></div>
+  <div class="why"><h4>Why an SC would bother</h4><p>The AVA harness builds and tests agents. This one answers the question that comes first on a discovery call: which queues carry the volume, what are people actually calling about, and what do those conversations sound like. Transcripts pulled here become AVA test scenarios there.</p></div>
+  <div class="snag"><h4>Snags</h4>
+    <ul>
+      <li><strong>Community project.</strong> No Genesys support path. Tools and names change between releases — pin a version if a demo depends on it.</li>
+      <li><strong>Customer data.</strong> Transcripts and sentiment are real customer conversations. Follow your engagement's data handling rules before pointing this at a production org.</li>
+      <li><strong><code>npx</code> not found.</strong> Install Node, or use the absolute path to <code>npx</code> as the command — same PATH inheritance problem as uv.</li>
+    </ul>
+  </div>
+</div>
+`
+},
+{
+  group:"Reference",
+  name:"Troubleshooting",
+  title:"Troubleshooting",
+  lede:"Symptom, likely cause, fix. Start here before re-running the whole install.",
+  body:`
+<h3>Server will not start</h3>
+<table>
+<tr><th style="width:27%">Symptom</th><th style="width:31%">Likely cause</th><th>Fix</th></tr>
+<tr><td><code>ava-harness</code> shows an error immediately</td><td><code>uv</code> not on the PATH Cursor uses</td><td>Run <code class="win">where uv</code><code class="mac">which uv</code> and put the absolute path in <code>"command"</code>. Restart Cursor.</td></tr>
+<tr><td>Starts, then exits</td><td>Index unreachable — proxy or firewall</td><td>Run the <code>uv run ... ava-mcp --help</code> command in a terminal to see the real network error. Fall back to the pinned wheel.</td></tr>
+<tr><td>Config appears ignored</td><td>Wrong file, or duplicate <code>ava-harness</code> key</td><td>Confirm which scope you are in, then confirm the file has exactly one <code>ava-harness</code> entry.</td></tr>
+<tr><td>Won't start after an edit</td><td>Malformed JSON — trailing comma, smart quotes</td><td>Validate the JSON. Re-type quotes if it was pasted through a document editor.</td></tr>
+<tr><td>Times out on first start</td><td>Cold cache download exceeded the timeout</td><td>Normal at 2–3 minutes. Retry; the second start is fast. Raise <code>timeout</code> if needed.</td></tr>
+</table>
+
+<h3>Skills and subagents</h3>
+<table>
+<tr><th style="width:27%">Symptom</th><th style="width:31%">Likely cause</th><th>Fix</th></tr>
+<tr><td>Verify check 1 reports files missing</td><td>Installed to the other scope</td><td>Check both the user and repo trees. Re-run <code>ava-mcp-update</code> against the correct destination.</td></tr>
+<tr><td>Files exist, skills never fire</td><td>Cursor has not reindexed</td><td>Restart Cursor itself, not just the MCP server.</td></tr>
+<tr><td><code>SKILL.md</code> reads as empty</td><td>Dehydrated cloud placeholder</td><td>The install is inside a synced folder. Move it to local disk — see step 5.</td></tr>
+<tr><td>Access denied writing <code>.cursor</code></td><td>File locks or ownership</td><td>Close Cursor and retry. <span class="win">On Windows, check folder ownership if it persists.</span></td></tr>
+<tr><td>Subagent can't see AVA skills but you can</td><td>Scope mismatch between install and spawn</td><td>Reinstall to user scope, restart Cursor, re-run verify.</td></tr>
+</table>
+
+<h3>Auth and permissions</h3>
+<table>
+<tr><th style="width:27%">Symptom</th><th style="width:31%">Likely cause</th><th>Fix</th></tr>
+<tr><td>Every call fails</td><td>Secret has trailing whitespace</td><td>Paste into a plain text editor, strip whitespace, re-enter, restart.</td></tr>
+<tr><td>Auth succeeds, no data</td><td>Wrong <code>AVA_HABITAT</code></td><td>Match it to your Genesys Cloud login URL — table on step 5.</td></tr>
+<tr><td><code>public_ok: false</code></td><td>Missing Sage scope, or org route not enabled</td><td>Add <code>agentic-virtualagents</code> scope to the role. If the role is right, the org needs the <code>agentic/virtualagents</code> Feature Toggle — raise with your admin or dev team.</td></tr>
+<tr><td>Mock Data Action tools absent</td><td><code>AVA_MOCK_DATA_ACTIONS_DISABLED=true</code> was set by the probe</td><td>Add the integrations grants from step 4, remove the variable, restart, re-run the probe.</td></tr>
+<tr><td><code>list_avas</code> fails, everything else fine</td><td>Org is not internal</td><td>AVA public API access is currently internal-org only. Confirm with your admin.</td></tr>
+<tr><td>Worked yesterday, fails today</td><td>Pre-issued token expired</td><td>Refresh the token, or move to client credentials.</td></tr>
+<tr><td><code>permissions</code> tool not found</td><td><code>AVA_TEST_MODE</code> absent or restart not applied</td><td>Re-add <code>"AVA_TEST_MODE": "true"</code>, restart, retry the probe.</td></tr>
+</table>
+
+<h3>Staying current</h3>
+<p><code>--reinstall-package ava_mcp</code> keeps the server itself fresh on every start. Skills and subagents do not update themselves — re-run the <code>ava-mcp-update</code> commands from step 8 when you see the newer-version warning, or at the start of a new engagement.</p>
+
+<div class="note info"><p><strong>Escalation order.</strong> Reproduce it in a clean Cursor window first, then check the Arena collateral for known issues and current region guidance, then raise it with the AVA team. Include: OS, install scope, <code>AVA_HABITAT</code>, the probe output, and the verbatim error. Never paste your <code>mcp.json</code> — it holds your secret. Redact or describe.</p></div>
+
+<h3>Sources</h3>
+<ul>
+<li>AVA setup instruction set — <code>/static/setup_instructions</code> plus the <code>_local</code>, <code>_validate</code> and <code>_verify</code> sub-guides on the AVA distribution endpoint</li>
+<li><a href="https://arena.genesys.com/collateral/8ZZRys5c-sM_8LPcml2Mk" target="_blank" rel="noopener">Arena collateral</a> — SC-facing AVA MCP material (SSO required)</li>
+<li><a href="https://github.com/MakingChatbots/genesys-cloud-mcp-server" target="_blank" rel="noopener">MakingChatbots/genesys-cloud-mcp-server</a> — community Platform API server</li>
+<li><a href="https://docs.astral.sh/uv/getting-started/installation/" target="_blank" rel="noopener">uv installation</a></li>
+<li><a href="https://help.genesys.cloud/articles/create-an-oauth-client/" target="_blank" rel="noopener">Create an OAuth client</a> · <a href="https://help.genesys.cloud/articles/oauth-scopes-for-applications-overview/" target="_blank" rel="noopener">OAuth scopes overview</a></li>
+</ul>
+`
+}
+];
+
+/* ============================================================
+   Render
+   ============================================================ */
+const railList = document.getElementById('railList');
+const panelHost = document.getElementById('panels');
+let current = 0;
+
+// group headers in rail
+let lastGroup = null;
+STEPS.forEach((s, idx) => {
+  if (s.group !== lastGroup) {
+    if (lastGroup !== null) {
+      const g = document.createElement('li');
+      g.className = 'grp';
+      g.textContent = s.group;
+      g.setAttribute('aria-hidden','true');
+      railList.appendChild(g);
+    }
+    lastGroup = s.group;
+  }
+  const li = document.createElement('li');
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'step';
+  btn.setAttribute('role','tab');
+  btn.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+  btn.id = 'tab-' + idx;
+  btn.innerHTML = '<span class="num">' + String(idx + 1).padStart(2,'0') +
+                  '</span><span class="stepname">' + s.name + '</span>';
+  btn.addEventListener('click', () => show(idx));
+  li.appendChild(btn);
+  railList.appendChild(li);
+
+  const sec = document.createElement('section');
+  sec.className = 'panel' + (idx === 0 ? ' on' : '');
+  sec.setAttribute('role','tabpanel');
+  sec.setAttribute('aria-labelledby','tab-' + idx);
+  sec.id = 'panel-' + idx;
+  sec.innerHTML =
+    '<p class="eyebrow">Step ' + (idx + 1) + ' of ' + STEPS.length + '</p>' +
+    '<h2>' + s.title + '</h2>' +
+    '<p class="lede">' + s.lede + '</p>' +
+    s.body +
+    '<div class="pager">' +
+      '<button type="button" class="prev"' + (idx === 0 ? ' disabled' : '') + '>&larr; ' +
+        (idx === 0 ? 'Start' : STEPS[idx-1].name) + '</button>' +
+      (idx === STEPS.length - 1
+        ? '<button type="button" class="next" disabled>Done</button>'
+        : '<button type="button" class="next">' + STEPS[idx+1].name + ' &rarr;</button>') +
+    '</div>';
+  panelHost.appendChild(sec);
+});
+
+panelHost.querySelectorAll('.pager .prev').forEach((b,i)=>b.addEventListener('click',()=>show(i-1)));
+panelHost.querySelectorAll('.pager .next').forEach((b,i)=>b.addEventListener('click',()=>show(i+1)));
+
+function show(idx){
+  if (idx < 0 || idx >= STEPS.length) return;
+  current = idx;
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('on', i===idx));
+  document.querySelectorAll('.rail button.step').forEach((b,i)=>b.setAttribute('aria-selected', i===idx ? 'true':'false'));
+  window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  document.querySelectorAll('.rail button.step')[idx].focus({preventScroll:true});
+}
+
+document.addEventListener('keydown', e=>{
+  if (e.target.matches('input,textarea,button.copy')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); show(current+1); }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); show(current-1); }
+});
+
+/* OS switch */
+document.querySelectorAll('.osswitch button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const os = b.dataset.os;
+    document.body.dataset.os = os;
+    document.querySelectorAll('.osswitch button').forEach(x=>
+      x.setAttribute('aria-pressed', x.dataset.os === os ? 'true' : 'false'));
+  });
+});
+
+/* Copy buttons on every code block */
+document.querySelectorAll('.codewrap').forEach(w=>{
+  const pre = w.querySelector('pre');
+  if (!pre) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'copy';
+  btn.textContent = 'Copy';
+  btn.addEventListener('click', async ()=>{
+    try {
+      await navigator.clipboard.writeText(pre.innerText);
+      btn.textContent = 'Copied';
+    } catch {
+      btn.textContent = 'Select manually';
+    }
+    setTimeout(()=>btn.textContent = 'Copy', 1800);
+  });
+  w.appendChild(btn);
+});
+</script>
+</body>
+</html>
