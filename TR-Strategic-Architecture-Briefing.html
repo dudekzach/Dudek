@@ -1,218 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thomson Reuters – Architecture Briefing Guide</title>
-  <style>
-    :root {
-      --blue: #1f4e79;
-      --light-blue: #eaf2f8;
-      --dark: #243746;
-      --gray: #5f6b75;
-      --light-gray: #f4f6f8;
-      --border: #d8dee4;
-      --green: #2f6f4e;
-      --amber: #9a6700;
-      --white: #ffffff;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thomson Reuters – Architecture Briefing Guide</title>
+<style>
+  :root{
+    --navy:#1E2761;
+    --navy-deep:#151C4A;
+    --ice:#CADCFC;
+    --ice-bg:#EEF3FD;
+    --slate:#3A4166;
+    --muted:#5B6280;
+    --border:#E1E4F0;
+    --white:#FFFFFF;
+    --bg:#F7F8FC;
+    --fact:#1E6E4F;
+    --fact-bg:#E7F5EF;
+    --recall:#9A6700;
+    --recall-bg:#FBF0DA;
+    --interp:#2F3C7E;
+    --interp-bg:#E9ECFA;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Calibri,Arial,sans-serif;
+    color:var(--slate);
+    background:var(--bg);
+    line-height:1.55;
+  }
+  h1,h2,h3{font-family:Cambria,"Times New Roman",serif; color:var(--navy);}
+  a{color:var(--navy);}
+
+  .shell{
+    display:grid;
+    grid-template-columns:290px 1fr;
+    max-width:1280px;
+    margin:0 auto;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    padding:34px 22px 34px 34px;
+    border-right:1px solid var(--border);
+  }
+  .brand-eyebrow{
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .brand-title{
+    font-size:19px;
+    font-weight:700;
+    color:var(--navy);
+    margin:0 0 22px;
+    line-height:1.3;
+  }
+  .navlabel{
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  .jump{list-style:none; margin:0 0 26px; padding:0;}
+  .jump li{margin:0;}
+  .jump a{
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+    text-decoration:none;
+    color:var(--slate);
+    font-size:13.5px;
+    padding:8px 10px;
+    border-radius:6px;
+    margin-bottom:2px;
+  }
+  .jump a .num{
+    font-family:Cambria,serif;
+    font-weight:700;
+    color:var(--navy);
+    font-size:12px;
+    min-width:16px;
+  }
+  .jump a:hover{background:var(--ice-bg);}
+  .jump a.active{
+    background:var(--navy);
+    color:var(--white);
+  }
+  .jump a.active .num{color:var(--ice);}
+
+  .legend{
+    border-top:1px solid var(--border);
+    padding-top:16px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .legend .row{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .dot.fact{background:var(--fact);}
+  .dot.recall{background:var(--recall);}
+  .dot.interp{background:var(--interp);}
+
+  .backtotop{
+    display:inline-block;
+    margin-top:20px;
+    font-size:12.5px;
+    color:var(--navy);
+    text-decoration:none;
+    font-weight:700;
+  }
+
+  /* ---------- Main ---------- */
+  main{padding:34px 44px 80px;}
+  .header{
+    border-bottom:3px solid var(--navy);
+    padding-bottom:22px;
+    margin-bottom:26px;
+  }
+  .eyebrow{
+    font-size:12px;
+    font-weight:700;
+    color:var(--navy);
+    margin-bottom:6px;
+  }
+  h1{font-size:30px; margin:0 0 8px;}
+  .subtitle{font-size:15.5px; color:var(--muted); margin:0; max-width:640px;}
+
+  .callout{
+    background:var(--ice-bg);
+    border-left:4px solid var(--navy);
+    padding:16px 18px;
+    margin:20px 0;
+    border-radius:4px;
+    font-size:14.5px;
+  }
+  .callout strong{color:var(--navy);}
+  .callout.amber{background:var(--recall-bg); border-left-color:var(--recall);}
+  .callout.amber strong{color:var(--recall);}
+  .callout.green{background:var(--fact-bg); border-left-color:var(--fact);}
+  .callout.green strong{color:var(--fact);}
+
+  .pill{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:11px;
+    margin-left:6px;
+  }
+  .pill.fact{background:var(--fact-bg); color:var(--fact);}
+  .pill.recall{background:var(--recall-bg); color:var(--recall);}
+  .pill.interp{background:var(--interp-bg); color:var(--interp);}
+
+  /* ---------- Accordion sections ---------- */
+  details.section{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:8px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  details.section > summary{
+    list-style:none;
+    cursor:pointer;
+    padding:18px 22px;
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    font-family:Cambria,serif;
+    user-select:none;
+  }
+  details.section > summary::-webkit-details-marker{display:none;}
+  .secnum{
+    font-size:12px;
+    color:var(--muted);
+    font-family:Calibri,sans-serif;
+    font-weight:700;
+    min-width:64px;
+  }
+  details.section > summary h2{
+    font-size:18px;
+    margin:0;
+    flex:1;
+  }
+  .chev{
+    font-size:13px;
+    color:var(--navy);
+    transition:transform .15s ease;
+    transform:rotate(0deg);
+  }
+  details.section[open] > summary .chev{transform:rotate(90deg);}
+  .secbody{
+    padding:0 22px 22px 22px;
+    border-top:1px solid var(--border);
+    padding-top:16px;
+  }
+  .secbody p{margin:8px 0 12px; font-size:14.5px;}
+  .secbody ul{margin:8px 0 14px 20px; padding:0; font-size:14.5px;}
+  .secbody li{margin:5px 0;}
+  h3{font-size:14.5px; margin:16px 0 7px;}
+
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-top:12px;
+  }
+  .card{
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:15px 16px;
+    background:var(--bg);
+  }
+  .card h3{margin-top:0; color:var(--navy);}
+
+  .quote{
+    font-style:italic;
+    color:var(--slate);
+    border-left:3px solid var(--ice);
+    padding-left:13px;
+    margin:14px 0;
+    font-size:14.5px;
+  }
+
+  .tag{
+    display:inline-block;
+    background:var(--ice-bg);
+    border-radius:12px;
+    padding:4px 10px;
+    margin:3px 5px 3px 0;
+    font-size:12px;
+    color:var(--navy);
+    font-weight:700;
+  }
+
+  .prompt{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 16px;
+    margin:10px 0;
+  }
+  .prompt-label{
+    font-size:11px;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+
+  .closeout{
+    background:var(--fact-bg);
+    border:1px solid #cfe1d7;
+    border-left:4px solid var(--fact);
+    padding:16px 18px;
+    margin-top:6px;
+    border-radius:4px;
+    font-size:14.5px;
+  }
+  .closeout strong{color:var(--fact);}
+
+  footer.docfoot{
+    margin-top:30px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:11.5px;
+    color:var(--muted);
+  }
+
+  @media (max-width:860px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{
+      position:static;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--border);
+      padding:22px 22px 18px;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: var(--dark);
-      background: #ffffff;
-      line-height: 1.5;
-    }
-
-    .page {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 42px 48px 60px;
-    }
-
-    .header {
-      border-bottom: 3px solid var(--blue);
-      padding-bottom: 20px;
-      margin-bottom: 28px;
-    }
-
-    .eyebrow {
-      text-transform: uppercase;
-      letter-spacing: 1.3px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--blue);
-      margin-bottom: 7px;
-    }
-
-    h1 {
-      font-size: 30px;
-      margin: 0 0 8px;
-      color: var(--dark);
-    }
-
-    .subtitle {
-      font-size: 16px;
-      color: var(--gray);
-      margin: 0;
-    }
-
-    h2 {
-      font-size: 20px;
-      color: var(--blue);
-      margin: 30px 0 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    h3 {
-      font-size: 15px;
-      color: var(--dark);
-      margin: 18px 0 7px;
-    }
-
-    p {
-      margin: 8px 0 12px;
-    }
-
-    ul {
-      margin: 8px 0 14px 20px;
-      padding: 0;
-    }
-
-    li {
-      margin: 5px 0;
-    }
-
-    .callout {
-      background: var(--light-blue);
-      border-left: 5px solid var(--blue);
-      padding: 16px 18px;
-      margin: 18px 0;
-      border-radius: 3px;
-    }
-
-    .callout strong {
-      color: var(--blue);
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      margin-top: 16px;
-    }
-
-    .card {
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 16px;
-      background: var(--white);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      color: var(--blue);
-    }
-
-    .prompt {
-      background: var(--light-gray);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 15px 17px;
-      margin: 10px 0;
-    }
-
-    .prompt-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 700;
-      color: var(--gray);
-      margin-bottom: 5px;
-    }
-
-    .quote {
-      font-style: italic;
-      color: #3f4b54;
-      border-left: 3px solid #aab4bd;
-      padding-left: 13px;
-      margin: 12px 0;
-    }
-
-    .tag {
-      display: inline-block;
-      background: #edf1f4;
-      border-radius: 12px;
-      padding: 4px 9px;
-      margin: 3px 4px 3px 0;
-      font-size: 12px;
-      color: #46515a;
-    }
-
-    .green {
-      border-left-color: var(--green);
-    }
-
-    .green strong {
-      color: var(--green);
-    }
-
-    .amber {
-      border-left-color: var(--amber);
-    }
-
-    .amber strong {
-      color: var(--amber);
-    }
-
-    .closeout {
-      background: #f7fbf8;
-      border: 1px solid #cfe1d7;
-      border-left: 5px solid var(--green);
-      padding: 17px 18px;
-      margin-top: 24px;
-      border-radius: 3px;
-    }
-
-    .footer {
-      margin-top: 35px;
-      padding-top: 15px;
-      border-top: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--gray);
-    }
-
-    @media (max-width: 720px) {
-      .page {
-        padding: 28px 22px 40px;
-      }
-
-      .two-col {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 25px;
-      }
-    }
-  </style>
+    main{padding:24px 20px 60px;}
+    .two-col{grid-template-columns:1fr;}
+  }
+  @media print{
+    .sidebar{display:none;}
+    .shell{grid-template-columns:1fr;}
+    details.section{border:none;}
+    details.section > summary .chev{display:none;}
+  }
+</style>
 </head>
-
 <body>
-  <div class="page">
+
+<div class="shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <nav class="sidebar" id="sidebar">
+    <div class="brand-eyebrow">Internal Prep / Conversation Guide</div>
+    <div class="brand-title">Thomson Reuters<br>Architecture Briefing</div>
+
+    <p class="navlabel">Jump to</p>
+    <ol class="jump">
+      <li><a href="#s1"><span class="num">1</span><span>Start With the Context</span></a></li>
+      <li><a href="#s2"><span class="num">2</span><span>What TR Is Actually Asking For</span></a></li>
+      <li><a href="#s3"><span class="num">3</span><span>The Core Customer Concern</span></a></li>
+      <li><a href="#s4"><span class="num">4</span><span>Foundation Example: Flow Milestones</span></a></li>
+      <li><a href="#s5"><span class="num">5</span><span>Connect to Existing Work</span></a></li>
+      <li><a href="#s6"><span class="num">6</span><span>What I'd Like From Architecture</span></a></li>
+      <li><a href="#s7"><span class="num">7</span><span>Important Guardrail</span></a></li>
+      <li><a href="#s8"><span class="num">8</span><span>Proposed Customer Outcome</span></a></li>
+      <li><a href="#s9"><span class="num">9</span><span>Closing Internal Questions</span></a></li>
+    </ol>
+
+    <div class="legend">
+      <p class="navlabel" style="margin-bottom:10px;">Source key</p>
+      <div class="row"><span class="dot fact"></span> Documented (action tracker)</div>
+      <div class="row"><span class="dot recall"></span> Recalled from conversation</div>
+      <div class="row"><span class="dot interp"></span> Interpretation / framing</div>
+    </div>
+
+    <a class="backtotop" href="#top">↑ Back to top</a>
+  </nav>
+
+  <!-- ===================== MAIN ===================== -->
+  <main id="top">
 
     <div class="header">
       <div class="eyebrow">Internal Prep / Conversation Guide</div>
       <h1>Thomson Reuters – Architecture Briefing</h1>
       <p class="subtitle">
-        Guide for bringing the Lead Architect and Director of Solution Architects up to speed
-        before the Thomson Reuters architecture discussion.
+        Guide for bringing the Lead Architect and Director of Solution Architects
+        up to speed before the Thomson Reuters architecture discussion.
       </p>
     </div>
 
@@ -222,190 +343,302 @@
       and the intended direction of the upcoming Thomson Reuters discussion.
     </div>
 
-    <h2>1. Start With the Context</h2>
+    <!-- ============ 1 ============ -->
+    <details class="section" id="s1" open>
+      <summary>
+        <span class="secnum">Section 1</span>
+        <h2>Start With the Context</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <p>
+          "I was asked to take the information captured in the Thomson Reuters Xperience
+          action tracker, along with what I can recall from the customer conversation,
+          and turn that into an Architect request. I did not originate the discovery,
+          so I want to give you the context as accurately as I can before we discuss
+          how we approach the customer."
+        </p>
 
-    <p>
-      “I was asked to take the information captured in the Thomson Reuters Xperience
-      action tracker, along with what I can recall from the customer conversation,
-      and turn that into an Architect request. I did not originate the discovery,
-      so I want to give you the context as accurately as I can before we discuss
-      how we approach the customer.”
-    </p>
+        <div class="two-col">
+          <div class="card">
+            <h3>Customer sentiment <span class="pill recall">Recalled</span></h3>
+            <ul>
+              <li>Very positive response to Genesys Xperience in Las Vegas.</li>
+              <li>Jake and Jeb specifically called out Dave Gussin as a favorite presenter.</li>
+              <li>They want to continue the conversation around the methodologies and architectural thinking presented at Xperience.</li>
+            </ul>
+          </div>
 
-    <div class="two-col">
-      <div class="card">
-        <h3>Customer sentiment</h3>
-        <ul>
-          <li>Very positive response to Genesys Xperience in Las Vegas.</li>
-          <li>Jake and Jeb specifically called out Dave Gussin as a favorite presenter.</li>
-          <li>They want to continue the conversation around the methodologies and architectural thinking presented at Xperience.</li>
-        </ul>
+          <div class="card">
+            <h3>Why the conversation is broader <span class="pill interp">Interpretation</span></h3>
+            <ul>
+              <li>This is not intended to replace active implementation work.</li>
+              <li>The customer is asking for a broader architectural perspective.</li>
+              <li>The goal is to understand how today's decisions position them for future adoption.</li>
+            </ul>
+          </div>
+        </div>
       </div>
+    </details>
 
-      <div class="card">
-        <h3>Why the conversation is broader</h3>
-        <ul>
-          <li>This is not intended to replace active implementation work.</li>
-          <li>The customer is asking for a broader architectural perspective.</li>
-          <li>The goal is to understand how today's decisions position them for future adoption.</li>
-        </ul>
+    <!-- ============ 2 ============ -->
+    <details class="section" id="s2">
+      <summary>
+        <span class="secnum">Section 2</span>
+        <h2>What Thomson Reuters Is Actually Asking For</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <div class="quote">
+          "Jake wants to understand how absolutely everything ties together in the overall big picture."
+          <span class="pill recall">Recalled</span>
+        </div>
+
+        <p>
+          The conversation should be centered on the relationship between major areas of
+          the Genesys Cloud platform rather than treating each capability as a separate topic.
+        </p>
+
+        <div>
+          <span class="tag">Architect</span>
+          <span class="tag">Routing / Orchestration</span>
+          <span class="tag">WEM</span>
+          <span class="tag">Genesys Copilot</span>
+          <span class="tag">AI / Intelligence</span>
+          <span class="tag">Analytics</span>
+          <span class="tag">Knowledge</span>
+          <span class="tag">Data</span>
+          <span class="tag">Configuration / Development</span>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <h2>2. What Thomson Reuters Is Actually Asking For</h2>
+    <!-- ============ 3 ============ -->
+    <details class="section" id="s3">
+      <summary>
+        <span class="secnum">Section 3</span>
+        <h2>The Core Customer Concern</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <div class="callout">
+          <strong>Positioning:</strong>
+          This is not intended to be a feature-by-feature product presentation or a roadmap session.
+          Thomson Reuters wants to understand the architectural strategy and methodology behind
+          the platform so they can make the right foundational decisions now without unintentionally
+          limiting what they can adopt later.
+          <span class="pill recall">Recalled</span>
+        </div>
 
-    <div class="quote">
-      “Jake wants to understand how absolutely everything ties together in the overall big picture.”
-    </div>
-
-    <p>
-      The conversation should be centered on the relationship between major areas of
-      the Genesys Cloud platform rather than treating each capability as a separate topic.
-    </p>
-
-    <div>
-      <span class="tag">Architect</span>
-      <span class="tag">Routing / Orchestration</span>
-      <span class="tag">WEM</span>
-      <span class="tag">Genesys Copilot</span>
-      <span class="tag">AI / Intelligence</span>
-      <span class="tag">Analytics</span>
-      <span class="tag">Knowledge</span>
-      <span class="tag">Data</span>
-      <span class="tag">Configuration / Development</span>
-    </div>
-
-    <h2>3. The Core Customer Concern</h2>
-
-    <div class="callout">
-      <strong>Positioning:</strong>
-      This is not intended to be a feature-by-feature product presentation or a roadmap session.
-      Thomson Reuters wants to understand the architectural strategy and methodology behind
-      the platform so they can make the right foundational decisions now without unintentionally
-      limiting what they can adopt later.
-    </div>
-
-    <p>
-      Their concern is essentially future readiness: they do not want to make decisions
-      today that create limitations or unnecessary rework as their Genesys Cloud environment evolves.
-    </p>
-
-    <h2>4. The Foundation Example: Flow Milestones & Flow Outcomes</h2>
-
-    <p>
-      One point Thomson Reuters specifically acknowledged is that they need to establish
-      the right foundations before they can fully expand into more advanced capabilities.
-    </p>
-
-    <div class="prompt">
-      <div class="prompt-label">Use this as the example</div>
-      Flow milestones and flow outcomes are an example of the underlying instrumentation
-      and foundation they need to think about now in order to support future intelligence,
-      automation, orchestration, analytics, and AI use cases.
-    </div>
-
-    <p>
-      The broader question for the Architect is:
-      <strong>What foundational architectural decisions and practices should Thomson Reuters
-      establish now, and how do those decisions connect to the larger Genesys Cloud model?</strong>
-    </p>
-
-    <h2>5. Connect the Ask Back to the Existing Work</h2>
-
-    <p>
-      The Xperience action tracker already contains several related workstreams. The point is
-      not to cover each one individually, but to show that there is an emerging need for a
-      unifying architecture conversation.
-    </p>
-
-    <ul>
-      <li>Navigator / Kaleidoscope and routing</li>
-      <li>Building from Spec</li>
-      <li>Intent Intelligence</li>
-      <li>CX as Code</li>
-      <li>Rules Based Decisions</li>
-      <li>WFM adoption</li>
-      <li>AI / QM initiatives</li>
-      <li>Existing AVA / AI-related work</li>
-    </ul>
-
-    <p>
-      The customer is increasingly interested in how these types of efforts fit together
-      rather than becoming disconnected individual initiatives.
-    </p>
-
-    <h2>6. What I’d Like From the Architecture Team</h2>
-
-    <div class="two-col">
-      <div class="card">
-        <h3>Customer conversation</h3>
-        <ul>
-          <li>What should we explain about the overall architectural model?</li>
-          <li>Which concepts are most important to establish first?</li>
-          <li>How should we frame dependencies and sequencing?</li>
-          <li>How do we keep this strategic rather than turning it into a product tour?</li>
-        </ul>
+        <p>
+          Their concern is essentially future readiness: they do not want to make decisions
+          today that create limitations or unnecessary rework as their Genesys Cloud environment evolves.
+        </p>
       </div>
+    </details>
 
-      <div class="card">
-        <h3>Internal alignment</h3>
-        <ul>
-          <li>Who is the right resource to lead this?</li>
-          <li>Should Dave Gussin participate?</li>
-          <li>What existing Genesys work should we bring into the discussion?</li>
-          <li>What should the customer leave understanding?</li>
-        </ul>
+    <!-- ============ 4 ============ -->
+    <details class="section" id="s4">
+      <summary>
+        <span class="secnum">Section 4</span>
+        <h2>The Foundation Example: Flow Milestones &amp; Flow Outcomes</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <p>
+          One point Thomson Reuters specifically acknowledged is that they need to establish
+          the right foundations before they can fully expand into more advanced capabilities.
+          <span class="pill recall">Recalled</span>
+        </p>
+
+        <div class="prompt">
+          <div class="prompt-label">Use this as the example</div>
+          Flow milestones and flow outcomes are an example of the underlying instrumentation
+          and foundation they need to think about now in order to support future intelligence,
+          automation, orchestration, analytics, and AI use cases.
+        </div>
+
+        <p>
+          The broader question for the Architect is:
+          <strong>What foundational architectural decisions and practices should Thomson Reuters
+          establish now, and how do those decisions connect to the larger Genesys Cloud model?</strong>
+        </p>
       </div>
-    </div>
+    </details>
 
-    <h2>7. Important Guardrail</h2>
+    <!-- ============ 5 ============ -->
+    <details class="section" id="s5">
+      <summary>
+        <span class="secnum">Section 5</span>
+        <h2>Connect the Ask Back to the Existing Work</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <p>
+          The Xperience action tracker already contains several related workstreams
+          <span class="pill fact">Documented</span>. The point is
+          not to cover each one individually, but to show that there is an emerging need for a
+          unifying architecture conversation.
+        </p>
 
-    <div class="callout amber">
-      <strong>Keep the conversation architecture-focused.</strong>
-      Thomson Reuters is asking for methodology, relationships between capabilities,
-      foundational decisions, and sequencing—not a catalog of features or a promise
-      about future roadmap items.
-    </div>
+        <ul>
+          <li>Navigator / Kaleidoscope and routing</li>
+          <li>Building from Spec</li>
+          <li>Intent Intelligence</li>
+          <li>CX as Code</li>
+          <li>Rules Based Decisions</li>
+          <li>WFM adoption</li>
+          <li>AI / QM initiatives</li>
+          <li>Existing AVA / AI-related work</li>
+        </ul>
 
-    <h2>8. Proposed Customer Outcome</h2>
+        <p>
+          The customer is increasingly interested in how these types of efforts fit together
+          rather than becoming disconnected individual initiatives.
+        </p>
+      </div>
+    </details>
 
-    <div class="callout green">
-      <strong>By the end of the session:</strong>
-      Thomson Reuters should have a clearer understanding of how “everything ties together,”
-      what foundational decisions matter now, and how their current Genesys Cloud work fits
-      into a broader architectural direction.
-    </div>
+    <!-- ============ 6 ============ -->
+    <details class="section" id="s6">
+      <summary>
+        <span class="secnum">Section 6</span>
+        <h2>What I'd Like From the Architecture Team</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <div class="two-col">
+          <div class="card">
+            <h3>Customer conversation</h3>
+            <ul>
+              <li>What should we explain about the overall architectural model?</li>
+              <li>Which concepts are most important to establish first?</li>
+              <li>How should we frame dependencies and sequencing?</li>
+              <li>How do we keep this strategic rather than turning it into a product tour?</li>
+            </ul>
+          </div>
 
-    <h2>9. Close the Internal Briefing With These Questions</h2>
+          <div class="card">
+            <h3>Internal alignment</h3>
+            <ul>
+              <li>Who is the right resource to lead this?</li>
+              <li>Should Dave Gussin participate?</li>
+              <li>What existing Genesys work should we bring into the discussion?</li>
+              <li>What should the customer leave understanding?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </details>
 
-    <div class="prompt">
-      <div class="prompt-label">Question 1</div>
-      What is the simplest architectural story we can tell that will give Thomson Reuters
-      the “big picture” they are looking for?
-    </div>
+    <!-- ============ 7 ============ -->
+    <details class="section" id="s7">
+      <summary>
+        <span class="secnum">Section 7</span>
+        <h2>Important Guardrail</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <div class="callout amber">
+          <strong>Keep the conversation architecture-focused.</strong>
+          Thomson Reuters is asking for methodology, relationships between capabilities,
+          foundational decisions, and sequencing—not a catalog of features or a promise
+          about future roadmap items.
+        </div>
+      </div>
+    </details>
 
-    <div class="prompt">
-      <div class="prompt-label">Question 2</div>
-      What foundational areas should they prioritize now to avoid unnecessary rework later?
-    </div>
+    <!-- ============ 8 ============ -->
+    <details class="section" id="s8">
+      <summary>
+        <span class="secnum">Section 8</span>
+        <h2>Proposed Customer Outcome</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <div class="callout green">
+          <strong>By the end of the session:</strong>
+          Thomson Reuters should have a clearer understanding of how "everything ties together,"
+          what foundational decisions matter now, and how their current Genesys Cloud work fits
+          into a broader architectural direction.
+        </div>
+      </div>
+    </details>
 
-    <div class="prompt">
-      <div class="prompt-label">Question 3</div>
-      What should Dave / the Architect own in the conversation versus the existing account
-      and project teams?
-    </div>
+    <!-- ============ 9 ============ -->
+    <details class="section" id="s9">
+      <summary>
+        <span class="secnum">Section 9</span>
+        <h2>Close the Internal Briefing With These Questions</h2>
+        <span class="chev">▸</span>
+      </summary>
+      <div class="secbody">
+        <div class="prompt">
+          <div class="prompt-label">Question 1</div>
+          What is the simplest architectural story we can tell that will give Thomson Reuters
+          the "big picture" they are looking for?
+        </div>
 
-    <div class="closeout">
-      <strong>Desired internal outcome:</strong>
-      Leave aligned on the customer storyline, the Architect’s role, and the few architectural
-      concepts we need to make sure Thomson Reuters understands during the upcoming session.
-    </div>
+        <div class="prompt">
+          <div class="prompt-label">Question 2</div>
+          What foundational areas should they prioritize now to avoid unnecessary rework later?
+        </div>
 
-    <div class="footer">
-      Internal preparation guide based on the Thomson Reuters Xperience action register and
-      information provided for the Architect request.
-    </div>
+        <div class="prompt">
+          <div class="prompt-label">Question 3</div>
+          What should Dave / the Architect own in the conversation versus the existing account
+          and project teams?
+        </div>
 
-  </div>
+        <div class="closeout">
+          <strong>Desired internal outcome:</strong>
+          Leave aligned on the customer storyline, the Architect's role, and the few architectural
+          concepts we need to make sure Thomson Reuters understands during the upcoming session.
+        </div>
+      </div>
+    </details>
+
+    <footer class="docfoot">
+      <p><strong>Genesys internal use only.</strong> Internal preparation guide based on the Thomson Reuters
+      Xperience action register and information provided for the Architect request.</p>
+      <p>Recalled context reflects the user's memory of the live conversation and has not been independently
+      verified. Interpretation/framing reflects reasonable SC judgment, not customer-stated fact.</p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  try{
+    var links = Array.prototype.slice.call(document.querySelectorAll('.jump a[href^="#s"]'));
+    var map = {};
+    links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+    var sections = Array.prototype.slice.call(document.querySelectorAll('main details.section'));
+    if(!('IntersectionObserver' in window) || !sections.length) return;
+    var visible = {};
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ visible[e.target.id] = e.isIntersecting; });
+      var current = null;
+      for(var i=0;i<sections.length;i++){
+        if(visible[sections[i].id]){ current = sections[i].id; break; }
+      }
+      links.forEach(function(a){ a.classList.remove('active'); });
+      if(current && map[current]) map[current].classList.add('active');
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+    sections.forEach(function(s){ obs.observe(s); });
+
+    // Clicking a nav link opens the target section if collapsed
+    links.forEach(function(a){
+      a.addEventListener('click', function(){
+        var id = a.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if(el && el.tagName === 'DETAILS'){ el.open = true; }
+      });
+    });
+  }catch(e){}
+})();
+</script>
+
 </body>
 </html>
